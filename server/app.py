@@ -41,7 +41,7 @@ def get_hero_by_id(id):
     else:
         return jsonify({'error': 'Hero not found'}), 404
 
-#  list of superpowers
+#  list of powers
 @app.route('/powers', methods=['GET'])
 def get_powers():
     powers = Power.query.all()
@@ -55,7 +55,7 @@ def get_powers():
         power_list.append(power_data)
     return jsonify(power_list)
 
-# superpower by ID
+# Power by ID
 @app.route('/powers/<int:id>', methods=['GET'])
 def get_power_by_id(id):
     power = Power.query.get(id)
@@ -88,7 +88,7 @@ def update_power_description(id):
     else:
         return jsonify({'errors': ['Validation errors: Description is required']}), 400
 
-# New HeroPower 
+# Hero_Power 
 @app.route('/hero_powers', methods=['POST'])
 def create_hero_power():
     data = request.get_json()
@@ -107,7 +107,7 @@ def create_hero_power():
     if data['strength'] not in valid_strengths:
         return jsonify({'errors': ['Validation errors: Invalid strength value']}), 400
 
-    # new HeroPower association
+    # Posting Hero_Power association
     hero_power = HeroPower(hero=hero, power=power, strength=data['strength'])
     db.session.add(hero_power)
     db.session.commit()
