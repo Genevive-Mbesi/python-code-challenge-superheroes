@@ -10,9 +10,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 migrate = Migrate(app, db)
 db.init_app(app)
 
-# Routes and API functionality
 
-# Route to get a list of heroes
+
+# list of heroes
 @app.route('/heroes', methods=['GET'])
 def get_heroes():
     heroes = Hero.query.all()
@@ -26,7 +26,7 @@ def get_heroes():
         hero_list.append(hero_data)
     return jsonify(hero_list)
 
-# Route to get details of a specific hero by ID
+# details of a specific hero by ID
 @app.route('/heroes/<int:id>', methods=['GET'])
 def get_hero_by_id(id):
     hero = Hero.query.get(id)
@@ -41,7 +41,7 @@ def get_hero_by_id(id):
     else:
         return jsonify({'error': 'Hero not found'}), 404
 
-# Route to get a list of superpowers
+#  list of superpowers
 @app.route('/powers', methods=['GET'])
 def get_powers():
     powers = Power.query.all()
@@ -55,7 +55,7 @@ def get_powers():
         power_list.append(power_data)
     return jsonify(power_list)
 
-# Route to get details of a specific superpower by ID
+# superpower by ID
 @app.route('/powers/<int:id>', methods=['GET'])
 def get_power_by_id(id):
     power = Power.query.get(id)
@@ -69,7 +69,7 @@ def get_power_by_id(id):
     else:
         return jsonify({'error': 'Power not found'}), 404
 
-# Route to update the description of a specific superpower by ID
+# specific superpower by ID
 @app.route('/powers/<int:id>', methods=['PATCH'])
 def update_power_description(id):
     power = Power.query.get(id)
@@ -87,6 +87,40 @@ def update_power_description(id):
             return jsonify({'errors': ['Validation errors: Description must be at least 20 characters']}), 400
     else:
         return jsonify({'errors': ['Validation errors: Description is required']}), 400
+
+# New HeroPower 
+@app.route('/hero_powers', methods=['POST'])
+def create_hero_power():
+    data = request.get_json()
+
+    required_fields = ['strength', 'power_id', 'hero_id']
+    if not all(field in data for field in required_fields):
+        return jsonify({'errors': ['Validation errors: strength, power_id, and hero_id are required']}), 400
+
+    hero = Hero.query.get(data['hero_id'])
+    power = Power.query.get(data['power_id'])
+
+    if not hero or not power:
+        return jsonify({'errors': ['Validation errors: Hero or Power not found']}), 404
+
+    valid_strengths = ['Strong', 'Weak', 'Average']
+    if data['strength'] not in valid_strengths:
+        return jsonify({'errors': ['Validation errors: Invalid strength value']}), 400
+
+    # new HeroPower association
+    hero_power = HeroPower(hero=hero, power=power, strength=data['strength'])
+    db.session.add(hero_power)
+    db.session.commit()
+
+    hero_data = {
+        'id': hero.id,
+        'name': hero.name,
+        'super_name': hero.super_name,
+        'powers': [{'id': p.id, 'name': p.name, 'description': p.description} for p in hero.powers]
+    }
+    return jsonify(hero_data), 201
+   
+
 
 if __name__ == '__main__':
     app.run(debug=True)
